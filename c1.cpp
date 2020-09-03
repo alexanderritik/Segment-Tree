@@ -118,13 +118,50 @@ void generateAllSubset(vector<dataType> &data)
 
 /* function ends */
 
-vector<int>  seg(800008);
-vector<int>  a(200001);
+
+vector<ll>  seg(800008);
+vector<ll>  a(200001);
 
 
-void build(int idx , int start , int end)
+void segementArray(ll idx , ll start , ll end)
 {
-	//base case when there is only one element available
+	// cout << idx << " " << start << " " << end << endl;
+	if (start == end) {
+		seg[idx] = a[start];
+		return;
+	}
+
+	ll mid = (start + end) / 2;
+
+	segementArray(idx * 2 , start , mid);
+	segementArray(idx * 2 + 1, mid + 1 , end);
+
+	seg[idx] = min(seg[idx * 2]  , seg[(idx * 2) + 1]);
+	return;
+}
+
+
+ll query(ll qs, ll qe , ll start , ll end, ll idx)
+{
+	// cout << qs << " " << qe << " " << start << endl;
+	if (qs > end || qe < start) {
+		return INT_MAX;
+	}
+
+	if (start >= qs && end <= qe)
+		return seg[idx];
+
+	ll mid = (start + end) / 2;
+	ll l = query(qs, qe, start, mid , idx * 2);
+	ll r = query(qs, qe, mid + 1, end , idx * 2 + 1);
+
+	// cout << l << " " << r << endl;
+	return min(l, r);
+}
+
+void update(int idx , int start , int end , int updatePos)
+{
+	cout << idx << " " << start << " " << end << endl;
 	if (start == end)
 	{
 		seg[idx] = a[start];
@@ -132,28 +169,15 @@ void build(int idx , int start , int end)
 	}
 
 	int mid = (start + end) / 2;
-	build(idx * 2 , start , mid);
-	build(idx * 2 + 1 , mid + 1, end);
 
-	seg[idx] = min(seg[idx * 2] , seg[idx * 2 + 1]);
+	if (updatePos <= mid) update(idx * 2, start, mid , updatePos);
+	else update(idx * 2 + 1, mid + 1 , end , updatePos);
+	cout << seg[idx * 2] << " " << seg[(idx * 2) + 1] << endl;
+	seg[idx] = min(seg[idx * 2]  , seg[(idx * 2) + 1]);
 	return;
-
 }
 
-int query(int idx , int start , int end , int qs , int qe)
-{
-	if (qs > end || qe < start)
-		return INT_MAX;
 
-	if (start >= qs && end <= qe)
-		return seg[idx];
-
-	int mid = (start + end) / 2;
-	int l = query(idx * 2 , start , mid, qs, qe);
-	int r = query(idx * 2 + 1 , mid + 1 , end, qs, qe);
-
-	return min(l, r);
-}
 
 
 
@@ -166,25 +190,43 @@ int main()
 
 	fastIO;
 
-	int n, q;
+	ll n , q;
 	cin >> n >> q;
 
-	// Insert the given array
-	for (int i = 1; i <= n; ++i)
+	for (ll i = 1; i <= n; ++i)
 	{
 		cin >> a[i];
 	}
 
-	build(1, 1, n);
+	segementArray(1, 1, n);
+
+	// for (int i = 1; i <= ((n - 1) * 2 + 1); ++i)
+	// {
+	// 	cout << seg[i] << " ";
+	// }
+	// cout << endl;
 
 	while (q--)
 	{
-		int l , r;
-		cin >> l >> r;
-		cout << query(1, 1, n, l, r) << endl;
+		ll l, r;
+		cin >> l >> r ;
+		cout << query(l, r , 1, n, 1) << endl;
 	}
 
 
+	// cout << query(1, 5 , 1, 5, 1) << endl;
+	// cout << endl;
+	// cout << query(3, 5 , 1, 5, 1) << endl;
+
+	// a[2] = 10;
+	// update(1, 1, 5, 2);
+
+	// for (int i = 1; i <= ((n - 1) * 2 + 1); ++i)
+	// {
+	// 	cout << seg[i] << " ";
+	// }
+	// cout << endl;
+	// cout << query(1, 2 , 1, 5, 1) << endl;
 
 	return 0;
 }

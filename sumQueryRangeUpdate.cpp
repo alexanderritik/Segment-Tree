@@ -118,43 +118,93 @@ void generateAllSubset(vector<dataType> &data)
 
 /* function ends */
 
-vector<int>  seg(800008);
-vector<int>  a(200001);
+vector<ll>  seg(800008);
+vector<ll>  a(200001);
+vector<ll>  lazy(800008);
 
-
-void build(int idx , int start , int end)
+void build(int idx, int start , int end)
 {
-	//base case when there is only one element available
 	if (start == end)
 	{
-		seg[idx] = a[start];
+		seg[idx] = a[end];
 		return;
 	}
 
 	int mid = (start + end) / 2;
-	build(idx * 2 , start , mid);
-	build(idx * 2 + 1 , mid + 1, end);
 
-	seg[idx] = min(seg[idx * 2] , seg[idx * 2 + 1]);
-	return;
+	build(idx * 2, start, mid);
+	build(idx * 2 + 1 , mid + 1 , end);
 
+	seg[idx] = seg[idx * 2] + seg[idx * 2 + 1];
 }
 
-int query(int idx , int start , int end , int qs , int qe)
+int query(int idx , int start , int end, int qs , int qe)
 {
+	if (lazy[idx] != 0)
+	{
+		int dx = lazy[idx];
+		lazy[idx] = 0;
+		seg[idx] +=  dx * (end - start + 1);
+		if (start != end) {
+			lazy[idx * 2] += dx ;
+			lazy[idx * 2 + 1] += dx;
+		}
+	}
+
 	if (qs > end || qe < start)
-		return INT_MAX;
+		return 0;
 
 	if (start >= qs && end <= qe)
 		return seg[idx];
 
 	int mid = (start + end) / 2;
-	int l = query(idx * 2 , start , mid, qs, qe);
-	int r = query(idx * 2 + 1 , mid + 1 , end, qs, qe);
 
-	return min(l, r);
+	int left = query(idx * 2 , start , mid, qs , qe);
+	int right = query(idx * 2 + 1 , mid + 1 , end, qs , qe);
+
+	return left + right;
+
 }
 
+void update(int idx , int start , int end , int rangeStart , int rangeEnd , int val)
+{
+	if (lazy[idx] != 0)
+	{
+		int dx = lazy[idx];
+		seg[idx] += dx * (end - start + 1);
+		lazy[idx] = 0;
+
+		if (start != end) {
+			lazy[idx * 2] += dx ;
+			lazy[idx * 2 + 1] += dx;
+		}
+		return;
+	}
+
+	if (start > rangeEnd || end < rangeStart )
+		return ;
+
+	// you got the range now you need to upadte it
+	if (start >= rangeStart && end <= rangeEnd)
+	{
+		int dx = (end - start + 1) * val;
+		seg[idx] += dx;
+
+		if (start != end)
+		{
+			lazy[idx * 2] += val;
+			lazy[idx * 2 + 1] += val;
+		}
+		return;
+	}
+
+	int mid = (start + end) / 2;
+
+	update(idx * 2, start , mid , rangeStart , rangeEnd , val);
+	update(idx * 2 + 1 , mid + 1, end , rangeStart , rangeEnd  , val);
+
+	seg[idx] = seg[idx * 2] + seg[idx * 2 + 1];
+}
 
 
 int main()
@@ -166,23 +216,42 @@ int main()
 
 	fastIO;
 
+	// lazy prpogation
+
 	int n, q;
 	cin >> n >> q;
 
-	// Insert the given array
 	for (int i = 1; i <= n; ++i)
-	{
 		cin >> a[i];
+
+	for (int i = 1; i <= 2 * n + 1; ++i)
+	{
+		lazy[i] = 0;
 	}
+
 
 	build(1, 1, n);
 
 	while (q--)
 	{
-		int l , r;
-		cin >> l >> r;
-		cout << query(1, 1, n, l, r) << endl;
+		int ch;
+		cin >> ch;
+		if (ch == 2)
+		{
+			int l, r;
+			cin >> l >> r;
+			cout << query(1, 1, n, l, r) << endl;
+		}
+		else
+		{
+			int l , r, val;
+			cin >> l >> r >> val;
+			update(1, 1, n, l, r, val);
+		}
 	}
+
+
+
 
 
 

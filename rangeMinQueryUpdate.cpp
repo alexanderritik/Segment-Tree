@@ -117,11 +117,11 @@ void generateAllSubset(vector<dataType> &data)
 }
 
 /* function ends */
-vector<int>  seg(800008);
-vector<int>  a(200001);
+vector<ll>  seg(800008);
+vector<ll>  a(200001);
 
 
-void build(int idx , int start , int end)
+void build(ll idx , ll start , ll end)
 {
 	//base case when there is only one element available
 	if (start == end)
@@ -130,7 +130,7 @@ void build(int idx , int start , int end)
 		return;
 	}
 
-	int mid = (start + end) / 2;
+	ll mid = (start + end) / 2;
 	build(idx * 2 , start , mid);
 	build(idx * 2 + 1 , mid + 1, end);
 
@@ -139,23 +139,23 @@ void build(int idx , int start , int end)
 
 }
 
-int query(int idx , int start , int end , int qs , int qe)
+ll query(ll idx , ll start , ll end , ll qs , ll qe)
 {
 	if (qs > end || qe < start)
 		return INT_MAX;
 
-	if (start >= qs && qs <= end)
+	if (start >= qs && end <= qe)
 		return seg[idx];
 
-	int mid = (start + end) / 2;
-	int l = query(idx * 2 , start , mid, qs, qe);
-	int r = query(idx * 2 + 1 , mid + 1 , end, qs, qe);
+	ll mid = (start + end) / 2;
+	ll l = query(idx * 2 , start , mid, qs, qe);
+	ll r = query(idx * 2 + 1 , mid + 1 , end, qs, qe);
 
 	return min(l, r);
 }
 
 // this is a point update
-void update(int idx, int start , int end , int newPos)
+void update(ll idx, ll start , ll end , ll newPos)
 {
 	if (start == end)
 	{
@@ -163,7 +163,7 @@ void update(int idx, int start , int end , int newPos)
 		return ;
 	}
 
-	int mid = (start + end) / 2;
+	ll mid = (start + end) / 2;
 
 	if (newPos <= mid) update(idx * 2 , start , mid, newPos);
 	else update(idx * 2 + 1 , mid + 1 , end, newPos);
@@ -184,11 +184,11 @@ int main()
 
 	fastIO;
 
-	int n, q;
+	ll n, q;
 	cin >> n >> q;
 
 	// Insert the given array
-	for (int i = 1; i <= n; ++i)
+	for (ll i = 1; i <= n; ++i)
 	{
 		cin >> a[i];
 	}
@@ -197,14 +197,14 @@ int main()
 
 	while (q--)
 	{
-		int ch , l , r;
+		ll ch , l , r;
 		cin >> ch ;
-		if (ch == 0) {
+		if (ch == 2) {
 			cin >> l >> r;
 			cout << query(1, 1, n, l, r) << endl;
 		}
 		else {
-			int pos, val;
+			ll pos, val;
 			cin >> pos >> val;
 			a[pos] = val;
 			update(1, 1, n, pos);

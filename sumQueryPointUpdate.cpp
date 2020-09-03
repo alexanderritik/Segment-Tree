@@ -117,45 +117,56 @@ void generateAllSubset(vector<dataType> &data)
 }
 
 /* function ends */
+vector<ll>  seg(800008);
+vector<ll>  a(200001);
 
-vector<int>  seg(800008);
-vector<int>  a(200001);
-
-
-void build(int idx , int start , int end)
+void build(ll idx , ll start , ll end)
 {
-	//base case when there is only one element available
-	if (start == end)
-	{
+	if (start == end) {
+		seg[idx] = a[start] ;
+		return;
+	}
+
+
+	ll mid = (start + end) / 2;
+
+	build(idx * 2 , start , mid);
+	build(idx * 2 + 1 , mid + 1 , end);
+
+	seg[idx] = seg[idx * 2] + seg[idx * 2 + 1];
+}
+
+
+ll query(ll idx , ll start , ll end , ll qs , ll qe)
+{
+	if (qs > end || qe < start)
+		return 0;
+
+	if (start >= qs && end <= qe)
+		return seg[idx];
+
+	ll mid = (start + end) / 2;
+
+	ll leftSum = query(idx * 2 , start , mid , qs, qe);
+	ll rightSum = query(idx * 2 + 1 , mid + 1 , end , qs, qe);
+
+	return leftSum + rightSum;
+}
+
+
+void update(ll idx, ll start , ll end , ll newpos)
+{
+	if (start == end) {
 		seg[idx] = a[start];
 		return;
 	}
 
 	int mid = (start + end) / 2;
-	build(idx * 2 , start , mid);
-	build(idx * 2 + 1 , mid + 1, end);
+	if (newpos <= mid) update( idx * 2, start , mid , newpos);
+	else update( idx * 2 + 1 , mid + 1 , end , newpos);
 
-	seg[idx] = min(seg[idx * 2] , seg[idx * 2 + 1]);
-	return;
-
+	seg[idx] = seg[idx * 2] + seg[idx * 2 + 1];
 }
-
-int query(int idx , int start , int end , int qs , int qe)
-{
-	if (qs > end || qe < start)
-		return INT_MAX;
-
-	if (start >= qs && end <= qe)
-		return seg[idx];
-
-	int mid = (start + end) / 2;
-	int l = query(idx * 2 , start , mid, qs, qe);
-	int r = query(idx * 2 + 1 , mid + 1 , end, qs, qe);
-
-	return min(l, r);
-}
-
-
 
 int main()
 {
@@ -166,11 +177,10 @@ int main()
 
 	fastIO;
 
-	int n, q;
+	ll n , q;
 	cin >> n >> q;
 
-	// Insert the given array
-	for (int i = 1; i <= n; ++i)
+	for (ll i = 1; i <= n; ++i)
 	{
 		cin >> a[i];
 	}
@@ -179,9 +189,14 @@ int main()
 
 	while (q--)
 	{
-		int l , r;
-		cin >> l >> r;
-		cout << query(1, 1, n, l, r) << endl;
+		ll ch, l , r;
+		cin >> ch >> l >> r;
+		if (ch == 2)
+			cout << query(1, 1, n, l, r) << endl;
+		else {
+			a[l] = r;
+			update(1, 1, n, l);
+		}
 	}
 
 
