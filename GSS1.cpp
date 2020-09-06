@@ -118,14 +118,37 @@ void generateAllSubset(vector<dataType> &data)
 
 /* function ends */
 
-int a[50001];
-int seg[200004];
+struct data
+{
+	ll ans, suff , pref , sum;
+};
+
+int a[10001];
+vector<data> seg(40005);
+
+data make_data( int val)
+{
+	data res;
+	res.sum = val;
+	res.pref = res.suff = res.ans = val;
+	return res;
+}
+
+data combine(data l , data r)
+{
+	data res;
+	res.sum = l.sum + r.sum;
+	res.pref = max(l.pref , l.sum + r.pref);
+	res.suff = max(r.suff , l.suff + r.sum);
+	res.ans = max(l.suff + r.pref , max(l.ans, r.ans));
+	return res;
+}
 
 void build(int idx, int start , int end)
 {
 	if (start == end)
 	{
-		seg[idx] = a[start];
+		seg[idx] = make_data(a[start]);
 		return;
 	}
 
@@ -133,33 +156,45 @@ void build(int idx, int start , int end)
 	build(idx * 2 , start , mid);
 	build(idx * 2 + 1, mid + 1 , end);
 
-	if (seg[idx * 2] <= 0 || seg[idx * 2 + 1] <= 0 )
-	{
-		seg[idx] = min(seg[idx * 2], seg[idx * 2 + 1]) ;
-	}
-	else {
-		seg[idx] = seg[idx * 2] + seg[idx * 2 + 1];
-	}
+	seg[idx] = combine(seg[idx * 2], seg[idx * 2 + 1]);
+
 
 	return;
 }
 
-int query(int idx, int start , int end , int qs , int qe)
+data query (int v, int tl, int tr, int l, int r) {
+	if (l == tl && tr == r)
+		return seg[v];
+	int tm = (tl + tr) / 2;
+
+	if (r <= tm)
+		return query (v * 2, tl, tm, l, r);
+	if (l > tm)
+		return query (v * 2 + 1, tm + 1, tr, l, r);
+	return combine (
+	           query (v * 2, tl, tm, l, tm),
+	           query (v * 2 + 1, tm + 1, tr, tm + 1, r)
+	       );
+}
+
+void pointUpdate(int idx, int start , int end , int pos)
 {
-	// cout << end << " " << qe << endl;
-	if (start > qe || end < qs)
-		return 0;
-
-	if (start >= qs && end <= qe) {
-		return seg[idx];
+	if (start == end)
+	{
+		seg[idx] = make_data(a[start]);
+		return;
 	}
-
 	int mid = (start + end) / 2;
 
-	int left = query(idx * 2 , start , mid , qs , qe);
-	int right = query(idx * 2 + 1 , mid + 1 , end, qs , qe);
-	return left + right;
+	if (pos <= mid)
+		pointUpdate(idx * 2 , start , mid , pos);
+	else
+		pointUpdate(idx * 2 + 1 , mid + 1 , end , pos);
+
+	seg[idx] = combine(seg[idx * 2] , seg[idx * 2 + 1]);
+
 }
+
 
 int main()
 {
@@ -169,28 +204,54 @@ int main()
 #endif
 
 	fastIO;
-
-
-	int n;
-	cin >> n;
-	for (int i = 1; i <= n; ++i)
+	int t;
+	cin >> t;
+	while (t--)
 	{
-		cin >> a[i];
+		seg.clear();
+		int n;
+		cin >> n;
+		for (int i = 1; i <= n; ++i)
+		{
+			cin >> a[i];
+		}
+
+
+		build(1, 1, n);
+
+		int q;
+		cin >> q;
+		while (q--)
+		{
+			int x1, y1 , x2, y2;
+			cin >> x1 >> y1 >> x2 >> y2;
+			int total;
+			// cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+			if (x2 == y1)
+			{
+				total = query(1, 1, n, x1, y1).ans;
+			}
+			else if (x2 > y1 )
+			{
+
+				total = query(1, 1, n, x1, y1).suff;
+				total += query(1, 1, n, x2, y2).pref;
+
+				if (y1 + 1 <= x2 - 1)
+					total += query(1, 1, n, y1 + 1, x2 - 1).sum;
+			}
+			else
+			{
+				total = query(1, 1, n, x2, y1).ans;
+				int t1 = ( (query(1, 1, n, x1, x2 - 1).suff) + (query(1, 1, n, x2, y2).pref));
+				int t2 = (query(1, 1, n, x1, y1).suff) + (query(1, 1, n, y1 + 1, y2).pref);
+				total = max( total, max( t1  , t2 )  );
+			}
+			cout << total << endl;
+		}
+
 	}
 
-	build(1, 1, n);
-
-
-
-	int q;
-	cin >> q;
-	while (q--)
-	{
-		int l, r;
-		cin >> l >> r;
-		// cout << l << " " << r << endl;
-		cout << query(1, 1, n, l, r) << endl;
-	}
 
 
 
